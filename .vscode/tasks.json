@@ -17,12 +17,8 @@
             // Mark as the default build task so cmd/ctrl+shift+b will create them
             "group": {
                 "kind": "build",
-                "isDefault": false
+                "isDefault": true
             },
-            // Try start the task on folder open
-            "runOptions": {
-                "runOn": "folderOpen"
-            }
         },
         {
             // The name that shows up in terminal tab
@@ -125,7 +121,10 @@
             ],
             "type": "shell",
             "command": "./sr",
-            "args": ["-l", "test.pcap"],
+            "args": [
+                "-l",
+                "test.pcap"
+            ],
             "options": {
                 "shell": {
                     "executable": "bash",
