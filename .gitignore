@@ -5,4 +5,5 @@ sr
 *.log
 **/__pycache__/
 **/*.lock
+tests/project_base
 !.gitignore

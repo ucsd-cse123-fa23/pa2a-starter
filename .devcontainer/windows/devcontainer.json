@@ -20,5 +20,5 @@
         }
     },
     "privileged": true,
-    "postStartCommand": "service openvswitch-switch start && ovs-vsctl set-manager ptcp:6640"
+    "postStartCommand": "service openvswitch-switch start && ovs-vsctl set-manager ptcp:6640 && rm -f tests/project_base && ln -s /project-base tests/project_base"
 }
