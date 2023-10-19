@@ -2,4 +2,7 @@
 *.o
 sr
 *.pcap
+*.log
+**/__pycache__/
+**/*.lock
 !.gitignore
