@@ -17,11 +17,24 @@ import time
 import shutil
 import traceback
 import logging
+import warnings
+import contextlib
+import io
+import sys
 
-from scapy.all import sendp, sniff, Ether, ARP, ICMP, IP, TCP, UDP
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from scapy.all import sendp, sniff, Ether, ARP, ICMP, IP, TCP, UDP
 from queue import Queue, Empty
 
 from project_base.lab import *
+
+@contextlib.contextmanager
+def nostdout():
+    tso = sys.stdout
+    sys.stdout = io.StringIO()
+    yield
+    sys.stdout = tso
 
 class cd:
     """Context manager for changing the current working directory"""
@@ -56,9 +69,9 @@ class CSE123TestBase(unittest.TestCase):
             with open( os.path.join(self.SUBMISSION_DIR, 'test_make_stderr.log'), 'w') as logf_stdout, \
                 open( os.path.join(self.SUBMISSION_DIR, 'test_make_stdout.log'), 'w') as logf_stderr:
                 try:
-                    assert(os.system("make clean") == 0)
+                    assert(os.system("make clean > /dev/null") == 0)
                     subprocess.check_call(
-                        'make',
+                        "make",
                         stdout=logf_stdout,
                         stderr=logf_stderr
                     )
@@ -72,13 +85,13 @@ class CSE123TestBase(unittest.TestCase):
 
     def cleanupEnvironment(self):
         os.system("pkill -9 sr")
-        os.system("mn -c")
+        os.system("pkill -9 python2.7")
+        os.system("mn -c 2> /dev/null")
         if os.path.exists(self.LOCK_FILE):
-            print("Crash detected. Cleaning up ... ")
-            os.system("mn -c")
+            print("Cleaning up ... ")
             os.remove(self.LOCK_FILE)
 
-    def setUpEnvironment(self, rtable='rtable', build=True, manual_sr=False):
+    def setUpEnvironment(self, rtable='rtable', build=True, debug=False, manual_sr=False):
 
         global IPBASE, IP_SETTING
 
@@ -111,17 +124,21 @@ class CSE123TestBase(unittest.TestCase):
             self.pox_log = open(os.path.join(self.SUBMISSION_DIR, 'test_pox.log'), 'w')
             self.pox = pexpect.spawn(
                 pox_path,
-                args=['--verbose', 'ofhandler', 'srhandler'],
+                args=['--verbose', 'ofhandler', 'srhandler', "openflow.of_01", "--port=6653"],
                 logfile=self.pox_log,
                 encoding="utf-8"
             )
-            self.pox.expect('DEBUG:openflow.of_01:Listening on 0.0.0.0:6633')
+            self.pox.expect('DEBUG:openflow.of_01:Listening on 0.0.0.0:6653')
             logging.info("POX started.")
             stophttp()
-            get_ip_setting()
-            topo = CS144Topo()
-            self.mininet = Mininet( topo=topo, controller=RemoteController, ipBase=IPBASE )
-            self.mininet.start()
+            with warnings.catch_warnings(), nostdout():
+                warnings.simplefilter("ignore")
+                
+                get_ip_setting()
+                topo = CS144Topo()
+                # Gives warning even after ignore
+                self.mininet = Mininet( topo=topo, controller=RemoteController, ipBase=IPBASE )
+                self.mininet.start()
             server1, server2, client = self.mininet.get( 'server1', 'server2', 'client')
             s1intf = server1.defaultIntf()
             s2intf = server2.defaultIntf()
@@ -130,8 +147,10 @@ class CSE123TestBase(unittest.TestCase):
             s1intf.setIP('%s/8' % IP_SETTING['server1'])
             s2intf.setIP('%s/8' % IP_SETTING['server2'])
             clintf.setIP('%s/8' % IP_SETTING['client'])
-            for host in server1, server2, client:
-                set_default_route(host)
+
+            with nostdout():
+                for host in server1, server2, client:
+                    set_default_route(host)
             starthttp( server1 )
             starthttp( server2 )
             self.pox.expect('DEBUG:srhandler:SRServerListener catch RouterInfo even.*')
@@ -150,9 +169,9 @@ class CSE123TestBase(unittest.TestCase):
                 self.router.expect('<-- Ready to process packets -->', timeout=3)
                 logging.info("Router started.")
 
-        self.pcap_stream_client = PacketTest(clintf.link.intf2.name, client, debug=True)
-        self.pcap_stream_server1 = PacketTest(s1intf.link.intf2.name, server1, debug=True)
-        self.pcap_stream_server2 = PacketTest(s2intf.link.intf2.name, server2, debug=True)
+        self.pcap_stream_client = PacketTest(clintf.link.intf2.name, client, debug=debug)
+        self.pcap_stream_server1 = PacketTest(s1intf.link.intf2.name, server1, debug=debug)
+        self.pcap_stream_server2 = PacketTest(s2intf.link.intf2.name, server2, debug=debug)
         self.pcap_stream_client.run()
         self.pcap_stream_server1.run()
         self.pcap_stream_server2.run()
@@ -275,7 +294,8 @@ class PacketTest:
         self.buffer = Queue()
         self.debug = debug
         self.stop_flag = False
-        print("Packet test setup for {} on interface {}.".format(mn_node, host_iface))
+        if self.debug:
+            print("Packet test setup for {} on interface {}.".format(mn_node, host_iface))
 
     def onPktReceive(self, pkt):
         if self.debug:

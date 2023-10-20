@@ -1,18 +1,18 @@
-from test_base import *
+from base import *
 import unittest
 import random
 
-class Test1(CSE123TestBase):
-    
+class TestICMP(CSE123TestBase):
+
     def setUp(self):
-        self.setUpEnvironment(build=False)
+        # debug enables captured packet printing
+        self.setUpEnvironment(build=True, debug=False)
         # Any other initialization goes here
         self.nodes = [
             ('client', '10.0.1.100'),
             ('server1', '192.168.2.2'),
             ('server2', '172.64.3.10')
         ]
-        print("\n\n\n\nTest:")
 
     def tearDown(self):
         self.tearDownEnvironment()
@@ -33,7 +33,7 @@ class Test1(CSE123TestBase):
         dst_node = self.nodes[1]    # Server 1
         pkt = Ether(src=src_mac, dst=dst_mac)/IP(src=src_node[1], dst=dst_node[1], id=id)/ICMP(type=8, id=0x10)   # Echo request
         sent = self.sendPacket(pkt, node=src_node[0])
-        print(f"Sent: {sent[0]}")
+        # print(f"Sent: {sent[0]}")
 
         icmps = self.expectPackets(dst_node[0], type='icmp', timewait_sec=0.1)
         routed = False
@@ -48,7 +48,7 @@ class Test1(CSE123TestBase):
         dst_node = self.nodes[2]    # Server 2
         pkt = Ether(src=src_mac, dst=dst_mac)/IP(src=src_node[1], dst=dst_node[1], id=id)/ICMP(type=8, id=0x10)   # Echo request
         sent = self.sendPacket(pkt, node=src_node[0])
-        print(f"Sent: {sent[0]}")
+        # print(f"Sent: {sent[0]}")
 
         icmps = self.expectPackets(dst_node[0], type='icmp', timewait_sec=0.1)
         routed = False

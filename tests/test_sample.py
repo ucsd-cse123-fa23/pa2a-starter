@@ -1,11 +1,12 @@
-from test_base import *
+from base import *
 import unittest
 import random
 
-class Test1(CSE123TestBase):
+class Test2(CSE123TestBase):
     
     def setUp(self):
-        self.setUpEnvironment(build=False)
+        # debug enables captured packet printing
+        self.setUpEnvironment(build=True, debug=False)
         # Any other initialization goes here
 
     def tearDown(self):
