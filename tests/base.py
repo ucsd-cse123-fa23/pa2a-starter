@@ -154,7 +154,7 @@ class CSE123TestBase(unittest.TestCase):
                     set_default_route(host)
             starthttp( server1 )
             starthttp( server2 )
-            self.pox.expect('DEBUG:srhandler:SRServerListener catch RouterInfo even.*')
+            self.pox.expect('.*srhandler:SRServerListener catch RouterInfo even.*')
             logging.info("Mininet started.")
 
             if manual_sr:
