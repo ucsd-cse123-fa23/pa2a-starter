@@ -115,6 +115,7 @@ class CSE123TestBase(unittest.TestCase):
         self.router = None
 
         pox_path = os.path.join(self.VNET_BASE_PATH, 'pox', 'pox.py')
+        os.environ["PYTHONPATH"] = os.path.join(self.VNET_BASE_PATH, 'pox_module')
         router_path = os.path.join(self.SUBMISSION_DIR, 'sr')
 
         if build:
