@@ -6,7 +6,7 @@ class Test2(CSE123TestBase):
     
     def setUp(self):
         # debug enables captured packet printing
-        self.setUpEnvironment(build=True, debug=False)
+        self.setUpEnvironment()
         # Any other initialization goes here
 
     def tearDown(self):

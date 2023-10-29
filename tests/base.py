@@ -24,7 +24,7 @@ import sys
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    from scapy.all import sendp, sniff, Ether, ARP, ICMP, IP, TCP, UDP
+    from scapy.all import sendp, sniff, Ether, ARP, ICMP, IP, IPv6, TCP, UDP
 from queue import Queue, Empty
 
 from project_base.lab import *
@@ -178,6 +178,29 @@ class CSE123TestBase(unittest.TestCase):
         self.pcap_stream_server1.run()
         self.pcap_stream_server2.run()
 
+        self.client = {
+            "ip": "10.0.1.100",
+            "gw": "10.0.1.1",
+            "m": self.mininet.get("client"),
+            "mac": self.mininet.get("client").MAC(),
+            "gwmac": self.mininet.get("sw0").MAC(intf=self.mininet.get("client").defaultIntf().link.intf2.name),
+        }
+        self.server1 = {
+            "ip": "192.168.2.2",
+            "gw": "192.168.2.1",
+            "m": self.mininet.get("server1"),
+            "mac": self.mininet.get("server1").MAC(),
+            "gwmac": self.mininet.get("sw0").MAC(intf=self.mininet.get("server1").defaultIntf().link.intf2.name),
+        }
+        self.server2 = {
+            "ip": "172.64.3.10",
+            "gw": "172.64.3.1",
+            "m": self.mininet.get("server2"),
+            "mac": self.mininet.get("server2").MAC(),
+            "gwmac": self.mininet.get("sw0").MAC(intf=self.mininet.get("server2").defaultIntf().link.intf2.name),
+        }
+        self.gateways = list(map(lambda x: x["gw"], [self.client, self.server1, self.server2]))
+
     def tearDownEnvironment(self):
         stophttp()
 
@@ -266,7 +289,6 @@ class CSE123TestBase(unittest.TestCase):
                 # print(f"Received at {node}")
                 # pkt.show2()
                 return False
-
         return True
 
     def printPackets(self, pkts):
