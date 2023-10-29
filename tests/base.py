@@ -157,6 +157,7 @@ class CSE123TestBase(unittest.TestCase):
             self.pox.expect('.*srhandler:SRServerListener catch RouterInfo even.*')
             logging.info("Mininet started.")
 
+        with cd(self.SUBMISSION_DIR):
             if manual_sr:
                 input("Start router now and hit enter:")
             else:
@@ -260,11 +261,11 @@ class CSE123TestBase(unittest.TestCase):
 
         for node in buffers:
             for pkt in buffers[node]:
-                if node == sentNode and bytes(pkt) == bytes(sentPkt):
+                if (bytes(pkt) == bytes(sentPkt) and node == sentNode) or IPv6 in pkt:
                     continue
-                return False
+                # print(f"Received at {node}")
                 # pkt.show2()
-                # raise Exception("Unexpected packet!")
+                return False
 
         return True
 
