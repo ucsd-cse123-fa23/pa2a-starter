@@ -20,5 +20,8 @@
         }
     },
     "privileged": true,
+    "mounts": [
+        "source=/lib/modules,target=/lib/modules,type=bind"
+    ],
     "postStartCommand": "service openvswitch-switch start && ovs-vsctl set-manager ptcp:6640"
 }
